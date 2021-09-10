@@ -12,6 +12,9 @@ Required python packages:
 - osqp
 - chompack 
 
+# Test instances
+
+The ACOPF instances are taken from the PGLib (https://github.com/power-grid-lib/pglib-opf).
 
 ---------------------------------------------------------------------------------------
 Researchers affiliated with
