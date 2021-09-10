@@ -14,7 +14,7 @@ Required python packages:
 
 # Test instances
 
-The ACOPF instances are taken from the PGLib (https://github.com/power-grid-lib/pglib-opf).
+The ACOPF instances are taken from the library PGLib (https://github.com/power-grid-lib/pglib-opf), which is maintained by the IEEE PES Task Force on Benchmarks for Validation of Emerging Power System Algorithms.
 
 ---------------------------------------------------------------------------------------
 Researchers affiliated with
