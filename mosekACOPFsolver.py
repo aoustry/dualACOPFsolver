@@ -5,17 +5,12 @@ Created on Wed Jun 30 11:28:55 2021
 @author: aoust
 """
 
-import matplotlib.pyplot as plt
+
 import itertools
 from scipy.sparse import lil_matrix, csc_matrix, coo_matrix, diags, save_npz, load_npz, identity
-from scipy.sparse import linalg as sla
 import numpy as np
-import sys, time
-from scipy.sparse.linalg import eigsh as sparse_eighs
-import gershgorin as gersh
-import scipy.sparse.linalg as spla
 from mosek.fusion import *
-import scipy.linalg
+
 myZeroforCosts = 1E-6
 scale = 0.0001
 
