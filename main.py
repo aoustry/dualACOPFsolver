@@ -28,7 +28,7 @@ def execute_bundle_solver_with_ws(name_instance):
     np.random.seed(10)
     maxit = 500
     instance_config = {"lineconstraints" : lineconstraints,  "cliques_strategy":"ASP"}
-    Instance = instance.ACOPFinstance("pglib-opf/{0}.m".format(name_instance),name_instance,instance_config)
+    Instance = instance.ACOPFinstance("pglib-opf-TYP/{0}.m".format(name_instance),name_instance,instance_config)
     
     ACOPFsolver_config  = {'name':'config_with_ws',
               "rel_tol":rel_tol,
@@ -63,7 +63,7 @@ def execute_bundle_solver(name_instance):
     np.random.seed(10)
     maxit = 3000
     instance_config = {"lineconstraints" : lineconstraints,  "cliques_strategy":"ASP"}
-    Instance = instance.ACOPFinstance("pglib-opf/{0}.m".format(name_instance),name_instance,instance_config)
+    Instance = instance.ACOPFinstance("pglib-opf-TYP/{0}.m".format(name_instance),name_instance,instance_config)
     ACOPFsolver_config  = {'name':'config_no_ws',
               "rel_tol":rel_tol,
               'mbundle' : m,
