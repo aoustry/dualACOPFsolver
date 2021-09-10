@@ -1,5 +1,6 @@
 # dualACOPFsolver
-Implementation of a proximal bundle method (PBM) to solve the ACOPF's dual problem.
+Implementation of a proximal bundle method (PBM) to solve the ACOPF's dual problem, which is formulated as an unconstrained concave maximisation
+problem with a partially separable structure induced by the clique decomposition.
 In particular, we use this PBM as a processing step to polish MOSEK's dual solution.
 
 # Dependencies
@@ -10,6 +11,8 @@ Required python packages:
 - pandas
 - osqp
 - chompack 
+
+
 ---------------------------------------------------------------------------------------
 Researchers affiliated with
 
