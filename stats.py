@@ -76,8 +76,9 @@ def compute_table(maxlength):
     df['Estimated LB (Mosek)'],df['Certified LB (Mosek)'],df['CPU time (Mosek)'] =  mosek_evs,mosek_cvs,mosek_times
     df['mosek_status'] = status
     ######Bundle INFO
-    df["PBM It. nbr"], df['PBM avg. it. time'],df["Certified LB (PBM)"] = Ns, it_times,best_objs
+    df["PBM It. nbr"], df['PBM avg. it. time'] = Ns, it_times
     df['overhead'] =  (df["PBM It. nbr"]* df['PBM avg. it. time'])/df['CPU time (Mosek)']
+    df["Certified LB (PBM)"] = best_objs
     
     df['Progress wrt MOSEK certified LB (%)'] = 100*(df["Certified LB (PBM)"]-df['Certified LB (Mosek)'])/df['Certified LB (Mosek)']
     df['Progress wrt MOSEK estimated LB (%)'] = 100*(df["Certified LB (PBM)"]-df['Estimated LB (Mosek)'])/df['Estimated LB (Mosek)']
