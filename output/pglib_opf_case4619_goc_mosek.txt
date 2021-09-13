@@ -1,0 +1,24 @@
+Problem
+  Name                   : OPF-rank-relaxation
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 1095674         
+  Cones                  : 1               
+  Scalar variables       : 436962          
+  Matrix variables       : 4117            
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 152050
+Eliminator terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 2                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.28            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 1.27    

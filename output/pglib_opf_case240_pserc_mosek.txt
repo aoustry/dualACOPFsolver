@@ -1,0 +1,83 @@
+Problem
+  Name                   : OPF-rank-relaxation
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 16706           
+  Cones                  : 1               
+  Scalar variables       : 6240            
+  Matrix variables       : 223             
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 1494
+Eliminator terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 2                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.01    
+Problem
+  Name                   : OPF-rank-relaxation
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 16706           
+  Cones                  : 1               
+  Scalar variables       : 6240            
+  Matrix variables       : 223             
+  Integer variables      : 0               
+
+Optimizer  - threads                : 16              
+Optimizer  - solved problem         : the primal      
+Optimizer  - Constraints            : 12992
+Optimizer  - Cones                  : 1
+Optimizer  - Scalar variables       : 5497              conic                  : 4075            
+Optimizer  - Semi-definite variables: 223               scalarized             : 6560            
+Factor     - setup time             : 0.07              dense det. time        : 0.00            
+Factor     - ML order time          : 0.02              GP order time          : 0.00            
+Factor     - nonzeros before factor : 6.58e+05          after factor           : 9.54e+05        
+Factor     - dense dim.             : 2                 flops                  : 1.19e+08        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   5.6e+00  1.4e+03  1.0e+00  0.00e+00   0.000000000e+00   0.000000000e+00   1.0e+00  0.09  
+1   4.7e+00  1.2e+03  9.2e-01  -1.00e+00  -8.934331222e+01  -8.915894224e+01  8.4e-01  0.14  
+2   1.4e+00  3.7e+02  5.0e-01  -1.00e+00  -2.020529437e+03  -2.017734270e+03  2.6e-01  0.20  
+3   4.2e-01  1.1e+02  2.6e-01  -9.88e-01  -9.017523839e+03  -9.006239389e+03  7.4e-02  0.26  
+4   2.9e-01  7.4e+01  1.6e-01  -5.22e-01  -7.490671790e+03  -7.482456350e+03  5.2e-02  0.31  
+5   9.4e-02  2.4e+01  2.2e-02  4.22e-01   -2.110442906e+03  -2.108919130e+03  1.7e-02  0.37  
+6   3.6e-02  9.2e+00  4.7e-03  1.19e+00   -6.182514767e+02  -6.177828170e+02  6.4e-03  0.43  
+7   3.0e-02  7.8e+00  3.6e-03  1.33e+00   -4.526250679e+02  -4.522338126e+02  5.4e-03  0.50  
+8   1.6e-02  4.0e+00  1.3e-03  1.35e+00   -5.663123356e+01  -5.646052455e+01  2.8e-03  0.59  
+9   1.4e-02  3.6e+00  1.1e-03  1.23e+00   -1.423877191e+01  -1.408203493e+01  2.5e-03  0.65  
+10  5.8e-03  1.5e+00  2.6e-04  1.28e+00   1.889959395e+02   1.890539639e+02   1.0e-03  0.71  
+11  4.5e-03  1.2e+00  1.9e-04  1.02e+00   2.143301949e+02   2.143803468e+02   8.1e-04  0.78  
+12  1.9e-03  4.8e-01  5.2e-05  1.00e+00   2.782510203e+02   2.782717195e+02   3.4e-04  0.84  
+13  1.2e-03  3.1e-01  2.6e-05  1.01e+00   2.956040491e+02   2.956172679e+02   2.1e-04  0.90  
+14  4.3e-04  1.1e-01  5.5e-06  9.69e-01   3.154792984e+02   3.154838038e+02   7.6e-05  0.96  
+15  3.4e-04  8.7e-02  3.9e-06  9.81e-01   3.177337955e+02   3.177374137e+02   6.1e-05  1.01  
+16  3.2e-04  8.1e-02  3.5e-06  9.70e-01   3.183662719e+02   3.183696839e+02   5.7e-05  1.06  
+17  1.2e-04  3.0e-02  8.1e-07  9.77e-01   3.237735648e+02   3.237748862e+02   2.1e-05  1.12  
+18  9.5e-05  2.4e-02  5.9e-07  9.40e-01   3.244084459e+02   3.244095366e+02   1.7e-05  1.17  
+19  3.6e-05  9.1e-03  1.4e-07  9.74e-01   3.261600112e+02   3.261604318e+02   6.4e-06  1.22  
+20  9.5e-06  2.4e-03  1.9e-08  9.80e-01   3.269789078e+02   3.269790184e+02   1.7e-06  1.29  
+21  1.4e-06  3.5e-04  1.1e-09  9.91e-01   3.272337250e+02   3.272337425e+02   2.5e-07  1.34  
+22  2.5e-07  6.4e-05  8.5e-11  9.99e-01   3.272730086e+02   3.272730118e+02   4.5e-08  1.47  
+23  7.4e-08  9.2e-06  4.6e-12  1.00e+00   3.272805521e+02   3.272805526e+02   6.5e-09  1.55  
+24  7.4e-08  9.2e-06  4.6e-12  1.00e+00   3.272805521e+02   3.272805526e+02   6.5e-09  1.65  
+25  7.4e-08  9.2e-06  4.6e-12  1.00e+00   3.272805521e+02   3.272805526e+02   6.5e-09  1.74  
+26  7.4e-08  9.2e-06  4.6e-12  1.00e+00   3.272805537e+02   3.272805541e+02   6.5e-09  1.82  
+27  7.4e-08  9.2e-06  4.6e-12  1.00e+00   3.272805544e+02   3.272805549e+02   6.5e-09  1.92  
+28  7.4e-08  9.2e-06  4.6e-12  1.00e+00   3.272805546e+02   3.272805551e+02   6.5e-09  2.04  
+29  7.4e-08  9.2e-06  4.6e-12  1.00e+00   3.272805547e+02   3.272805552e+02   6.5e-09  2.14  
+Optimizer terminated. Time: 2.23    
+
+
+Interior-point solution summary
+  Problem status  : UNKNOWN
+  Solution status : UNKNOWN
+  Primal.  obj: 3.2728055471e+02    nrm: 6e+04    Viol.  con: 2e+00    var: 0e+00    barvar: 0e+00    cones: 0e+00  
+  Dual.    obj: 3.2728055516e+02    nrm: 5e+02    Viol.  con: 3e-17    var: 8e-08    barvar: 9e-07    cones: 0e+00  

@@ -1,0 +1,71 @@
+Problem
+  Name                   : OPF-rank-relaxation
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 11734           
+  Cones                  : 1               
+  Scalar variables       : 4339            
+  Matrix variables       : 189             
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 1047
+Eliminator terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 2                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.01    
+Problem
+  Name                   : OPF-rank-relaxation
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 11734           
+  Cones                  : 1               
+  Scalar variables       : 4339            
+  Matrix variables       : 189             
+  Integer variables      : 0               
+
+Optimizer  - threads                : 16              
+Optimizer  - solved problem         : the primal      
+Optimizer  - Constraints            : 9334
+Optimizer  - Cones                  : 2
+Optimizer  - Scalar variables       : 3738              conic                  : 3009            
+Optimizer  - Semi-definite variables: 189               scalarized             : 4803            
+Factor     - setup time             : 0.05              dense det. time        : 0.00            
+Factor     - ML order time          : 0.02              GP order time          : 0.00            
+Factor     - nonzeros before factor : 4.81e+05          after factor           : 7.55e+05        
+Factor     - dense dim.             : 2                 flops                  : 1.27e+08        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   6.3e+00  5.2e+00  3.1e+00  0.00e+00   2.821257562e+00   6.999372188e-01   1.0e+00  0.07  
+1   4.6e+00  3.8e+00  2.1e+00  4.10e-01   3.191148690e+00   1.515841124e+00   7.2e-01  0.11  
+2   1.0e+00  8.4e-01  1.9e-01  9.16e-01   1.017647275e+00   6.049026347e-01   1.6e-01  0.16  
+3   2.2e-01  1.8e-01  1.7e-02  1.10e+00   1.966783882e+00   1.880606105e+00   3.6e-02  0.21  
+4   5.8e-02  4.8e-02  1.7e-03  1.31e+00   2.200938069e+00   2.181496903e+00   9.3e-03  0.25  
+5   2.9e-02  2.4e-02  5.7e-04  1.33e+00   2.541947964e+00   2.533521651e+00   4.7e-03  0.30  
+6   1.5e-02  1.2e-02  2.0e-04  1.20e+00   2.657466030e+00   2.653543116e+00   2.3e-03  0.34  
+7   5.7e-03  4.7e-03  5.0e-05  1.01e+00   2.731728276e+00   2.730219681e+00   9.0e-04  0.39  
+8   1.9e-03  1.6e-03  9.8e-06  1.02e+00   2.757206608e+00   2.756712800e+00   3.0e-04  0.44  
+9   7.1e-04  5.9e-04  2.3e-06  1.05e+00   2.758441831e+00   2.758260794e+00   1.1e-04  0.48  
+10  1.0e-04  8.6e-05  1.4e-07  1.01e+00   2.757833223e+00   2.757807211e+00   1.7e-05  0.52  
+11  1.5e-05  1.2e-05  8.1e-09  8.93e-01   2.756044093e+00   2.756040278e+00   2.3e-06  0.57  
+12  5.7e-06  4.7e-06  1.9e-09  9.61e-01   2.755864804e+00   2.755863267e+00   9.1e-07  0.61  
+13  2.4e-07  2.0e-07  1.6e-11  9.95e-01   2.755760496e+00   2.755760430e+00   3.9e-08  0.66  
+14  1.6e-08  9.7e-08  2.9e-13  1.00e+00   2.755757320e+00   2.755757316e+00   2.6e-09  0.76  
+15  4.0e-09  2.9e-07  3.4e-14  1.00e+00   2.755757145e+00   2.755757144e+00   6.3e-10  0.85  
+16  1.3e-09  1.6e-06  5.9e-15  1.00e+00   2.755757106e+00   2.755757106e+00   2.0e-10  0.92  
+17  4.4e-10  7.0e-06  1.1e-15  1.00e+00   2.755757094e+00   2.755757094e+00   6.7e-11  0.98  
+Optimizer terminated. Time: 0.98    
+
+
+Interior-point solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: 2.7557570942e+00    nrm: 1e+01    Viol.  con: 1e-05    var: 0e+00    barvar: 0e+00    cones: 0e+00  
+  Dual.    obj: 2.7557570941e+00    nrm: 3e+00    Viol.  con: 2e-23    var: 3e-12    barvar: 2e-11    cones: 0e+00  

@@ -1,0 +1,27 @@
+Problem
+  Name                   : OPF-rank-relaxation
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 852348          
+  Cones                  : 1               
+  Scalar variables       : 339159          
+  Matrix variables       : 4406            
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 121507
+Eliminator terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 2                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.17            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.81    
+MOSEK error 1051: Out of space.
+Optimizer terminated. Time: 555.03  
+

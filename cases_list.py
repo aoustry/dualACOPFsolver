@@ -55,7 +55,4 @@ instances = [
  'pglib_opf_case6470_rte.m',
  'pglib_opf_case6495_rte.m',
  'pglib_opf_case6515_rte.m',
- 'pglib_opf_case9241_pegase.m', 
- 'pglib_opf_case9591_goc.m', 
- 'pglib_opf_case10000_goc.m' 
 ]
