@@ -220,10 +220,10 @@ class ACOPFinstance():
                 
                 #Build Nt line matrix
                 self.Nt[clique,idx_line] = lil_matrix((nc,nc),dtype = np.complex128)
-                self.Nt[clique,idx_line][local_index_bus_b,local_index_bus_b] = np.conj(self.Ytf[line]) * self.Ytf[line]#np.conj(self.Ytt[line]) * self.Ytt[line]
-                self.Nt[clique,idx_line][local_index_bus_a,local_index_bus_b] = np.conj(self.Ytt[line]) * self.Ytf[line] #np.conj(self.Ytt[line]) * self.Ytf[line]
-                self.Nt[clique,idx_line][local_index_bus_b,local_index_bus_a] = np.conj(self.Ytf[line]) * self.Ytt[line]#np.conj(self.Ytf[line]) * self.Ytt[line]
-                self.Nt[clique,idx_line][local_index_bus_a,local_index_bus_a] =np.conj(self.Ytt[line]) * self.Ytt[line] # np.conj(self.Ytf[line]) * self.Ytf[line]
+                self.Nt[clique,idx_line][local_index_bus_b,local_index_bus_b] = np.conj(self.Ytf[line]) * self.Ytf[line]
+                self.Nt[clique,idx_line][local_index_bus_a,local_index_bus_b] = np.conj(self.Ytt[line]) * self.Ytf[line]
+                self.Nt[clique,idx_line][local_index_bus_b,local_index_bus_a] = np.conj(self.Ytf[line]) * self.Ytt[line]
+                self.Nt[clique,idx_line][local_index_bus_a,local_index_bus_a] = np.conj(self.Ytt[line]) * self.Ytt[line] 
                 
                 
     def build_cliques(self,strategy):
