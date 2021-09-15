@@ -25,7 +25,7 @@ scaling_lambda = 1
 
 def execute_bundle_solver_with_ws(name_instance):
     """Function to execute the proximal bundle algorithm as post-processing for MOSEK """
-    np.random.seed(10)
+    np.random.seed(20)
     maxit = 500
     instance_config = {"lineconstraints" : lineconstraints,  "cliques_strategy":"ASP"}
     Instance = instance.ACOPFinstance("pglib-opf-TYP/{0}.m".format(name_instance),name_instance,instance_config)
