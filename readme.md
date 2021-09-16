@@ -18,6 +18,7 @@ The ACOPF instances are taken from the library PGLib (https://github.com/power-g
 
 # Numerical experiments
 
+
 Executing the file main.py will run the numerical experiments presented in the paper "The dual ACOPF as a sparse and unconstrained nonsmooth optimization problem".
 ---------------------------------------------------------------------------------------
 Researchers affiliated with
