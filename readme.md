@@ -18,7 +18,7 @@ The ACOPF instances are taken from the library PGLib (https://github.com/power-g
 
 # Numerical experiments
 
-Executing the file main.py will run the numerical experiments presented in the paper "A. Oustry, C. D'Ambrosio, L. Liberti, M. Ruiz, The dual ACOPF as a sparse and unconstrained nonsmooth optimization problem". Executing the file stats.py produces the full result table.
+Executing the file main.py will run the numerical experiments presented in the paper "A. Oustry, C. D'Ambrosio, L. Liberti, M. Ruiz, The dual ACOPF as a sparse and unconstrained nonsmooth optimization problem" (under review). Executing the file stats.py produces the full result table.
 
 ---------------------------------------------------------------------------------------
 Researchers affiliated with
