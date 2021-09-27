@@ -67,7 +67,7 @@ def compute_table(maxlength):
             mosek_cvs.append(mosek_cv)
             mosek_evs.append(mosek_ev)
             mosek_times.append(mosek_time)
-            ubs.append(compute_stats_instance_mips('MIPS_output/'+instance_name))
+            ubs.append(compute_stats_instance_mips('ipopt_output/'+instance_name))
             status.append(compute_mosek_status(folder+instance_name+"_mosek.txt"))
     df = pd.DataFrame()
     ######MOSEK INFO
@@ -85,10 +85,10 @@ def compute_table(maxlength):
     df['Progress wrt MOSEK certified LB (%)'] = 100*(df["Certified LB (PBM)"]-df['Certified LB (Mosek)'])/df['Certified LB (Mosek)']
     
     ######MIPS and gap
-    df['MIPS UB'] = ubs
-    df['Reduction of certified gap (%)'] = np.maximum(np.zeros(len(df)),100*(df["Certified LB (PBM)"]-df['Certified LB (Mosek)'])/(df['MIPS UB']-df['Certified LB (Mosek)']))
+    df['IPOPT UB'] = ubs
+    df['Reduction of certified gap (%)'] = np.maximum(np.zeros(len(df)),100*(df["Certified LB (PBM)"]-df['Certified LB (Mosek)'])/(df['IPOPT UB']-df['Certified LB (Mosek)']))
     
-    df['Reduction of estimated gap (%)'] = np.maximum(np.zeros(len(df)),100*(df["Certified LB (PBM)"]-df['Estimated LB (Mosek)'])/(df['MIPS UB']-df['Estimated LB (Mosek)']))
+    df['Reduction of estimated gap (%)'] = np.maximum(np.zeros(len(df)),100*(df["Certified LB (PBM)"]-df['Estimated LB (Mosek)'])/(df['IPOPT UB']-df['Estimated LB (Mosek)']))
 
     df = df.sort_values(by=['n'])
     return df 
@@ -112,7 +112,7 @@ def store_clean_table_accuracy_progress(df):
 def store_clean_table_gap_progress(df):
     table = pd.DataFrame()
     table['Instance'] = [s.replace('pglib_opf_case','') for s in df['Instance']]
-    table['UB'] = [("%.6g" % best_obj) for best_obj in df['MIPS UB']]
+    table['UB'] = [("%.6g" % best_obj) for best_obj in df['IPOPT UB']]
     table['Cert. gap reduction'] = [("%.2g" % best_obj)+"%" for best_obj in df['Reduction of certified gap (%)']]
     table['Est. gap reduction'] = [("%.2g" % best_obj)+"%" for best_obj in df['Reduction of estimated gap (%)']]
     table = table.dropna()

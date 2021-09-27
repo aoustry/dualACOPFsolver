@@ -179,7 +179,7 @@ class dualACOPFsolver():
         if self.verbose:
             print("\n")
             print("""-----------------------------------------------------------------
-                       dualACOPFsolver v0.1
+                       dualACOPFsolver v1.0
                           Antoine Oustry\n  Laboratoire d'informatique de l'Ecole polytechnique (LIX), 2021\n-----------------------------------------------------------------""")
             print("Instance :         {0}".format(self.name))
             print("                   (current line constr: {0})".format(self.cl>0))
