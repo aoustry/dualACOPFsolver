@@ -30,6 +30,8 @@ python3 stats.py
 produces the full result table.
 
 ---------------------------------------------------------------------------------------
+# Affiliation and sponsor
+
 Researchers affiliated with
 
 (o) LIX CNRS, École polytechnique, Institut Polytechnique de Paris, 91128, Palaiseau, France 
