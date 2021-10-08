@@ -3,9 +3,9 @@ Implementation of a proximal bundle method (PBM) to solve the ACOPF's dual probl
 problem with a partially separable structure induced by the clique decomposition.
 In particular, we use this PBM as a processing step to polish MOSEK's dual solution.
 
-# Dependencies
+# Programming language and dependencies
 
-Required python packages:
+dualACOPFsolver is implemented in Python3. The required packages are:
 - numpy
 - scipy
 - pandas
