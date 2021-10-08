@@ -18,8 +18,16 @@ The ACOPF instances are taken from the library PGLib (https://github.com/power-g
 
 # Numerical experiments
 
-Executing the file main.py will run the numerical experiments presented in the paper "A. Oustry, C. D'Ambrosio, L. Liberti, M. Ruiz, Certified and accurate SDP bounds for the ACOPF problem" (submitted, under review). 
-Executing the file stats.py produces the full result table.
+Executing 
+```
+python3 main.py
+```
+
+will run the numerical experiments presented in the paper "A. Oustry, C. D'Ambrosio, L. Liberti, M. Ruiz, Certified and accurate SDP bounds for the ACOPF problem" (submitted, under review).  Executing 
+```
+python3 stats.py
+```
+produces the full result table.
 
 ---------------------------------------------------------------------------------------
 Researchers affiliated with
