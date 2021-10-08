@@ -30,7 +30,7 @@ python3 stats.py
 produces the full result table.
 
 ---------------------------------------------------------------------------------------
-# Affiliation and sponsor
+# Affiliations and sponsor
 
 Researchers affiliated with
 
