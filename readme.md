@@ -10,7 +10,8 @@ dualACOPFsolver is implemented in Python3. The required packages are:
 - scipy
 - pandas
 - osqp
-- chompack 
+- chompack
+- cvxopt 
 
 # Test instances
 
