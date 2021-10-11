@@ -95,7 +95,7 @@ class dualACOPFsolver():
         self.cliques, self.ncliques = ACOPF.cliques, ACOPF.ncliques
         self.cliques_parent, self.cliques_intersection = ACOPF.cliques_parent, ACOPF.cliques_intersection 
         self.localBusIdx = ACOPF.localBusIdx
-        self.SVM = ACOPF.SVM
+        self.rho = ACOPF.SVM
                 
         #Lines quantities
         self.HM, self.ZM = ACOPF.HM, ACOPF.ZM
@@ -634,7 +634,7 @@ class dualACOPFsolver():
         x = np.arange(kbetacuts)
         Mbetacuts = coo_matrix((coefs,(x,y)),shape= (kbetacuts,self.d)).tocsc()
         M = vstack([self.Mfixedcuts, Mbetacuts, Meigencuts])
-        q = M.dot(self.xbar)
+        q = M.dot(self.thetabar)
         q[kfixed_cuts:kfixed_cuts+kbetacuts] = q[kfixed_cuts:kfixed_cuts+kbetacuts] + np.array(betacuts_offset)
         self.concattime =  tconcat - time.time()
         
@@ -649,16 +649,16 @@ class dualACOPFsolver():
         A_eigen_cuts = coo_matrix(([1]*keig_cuts,(eigencuts_idx,[kfixed_cuts+kbetacuts+i for i in range(keig_cuts)])),shape = (self.cliques_nbr,totcutnumber)).tocsc()
         A = vstack([A0, hstack([self.A_fixed_cuts, csc_matrix((self.A_fixed_cuts.shape[0],totcutnumber - kfixed_cuts))]), A_betacuts, A_eigen_cuts])
         l = np.array(([0]*totcutnumber) + ([1]*(self.N+2*self.n+2*self.cl)) + ([0]*self.cliques_nbr)) 
-        u = np.concatenate([np.ones(totcutnumber)*np.inf,np.ones(self.N+2*self.n+2*self.cl),np.array([self.SVM[idx_clique] for idx_clique in range(self.cliques_nbr)])]) 
+        u = np.concatenate([np.ones(totcutnumber)*np.inf,np.ones(self.N+2*self.n+2*self.cl),np.array([self.rho[idx_clique] for idx_clique in range(self.cliques_nbr)])]) 
         
         m = osqp.OSQP()
         m.setup(P= gram.tocsc() , q=q, A=A.tocsc(), l=l, u=u,eps_rel = osqp_eps_rel,polish = osqp_polish,verbose=osqp_verbose, eps_dual_inf  = osqp_eps_dual, max_iter = maxiter,check_termination =100)#,linsys_solver = "mkl pardiso")
         
         if self.it>=1:
-            x0 = np.concatenate([self.fixed_cuts_dual, betacuts_dual, eigencuts_dual])
+            theta_0 = np.concatenate([self.fixed_cuts_dual, betacuts_dual, eigencuts_dual])
             slacks = np.concatenate([self.fixed_cuts_slack,np.array([self.betacuts_slack[key] for key in betacuts_keys]),np.array([self.eigencuts_slack[key] for key in eigencuts_keys])])
             y0 = np.concatenate([slacks,self.tfixedcuts,self.tbeta,0.5*(self.teigenvalue+self.errors_by_clique)])
-            m.warm_start(x=x0,y = y0)
+            m.warm_start(x=theta_0,y = y0)
             
         results= m.solve()
         vector = results.x
@@ -691,30 +691,30 @@ class dualACOPFsolver():
         self.eigencuts_slack = {key : results.y[kfixed_cuts+kbetacuts+aux] for aux, key in enumerate(eigencuts_keys)}
         
         
-        x = self.xbar + (Mprime).dot(vector)
-        value_betacuts = Mbetacuts.dot(x) + np.array(betacuts_offset)
+        theta = self.thetabar + (Mprime).dot(vector)
+        value_betacuts = Mbetacuts.dot(theta) + np.array(betacuts_offset)
         self.tbeta = np.ones(self.n)*np.inf
         for aux in range(len(value_betacuts)):
             i = betacuts_idx[aux]
             self.tbeta[i] = min(value_betacuts[aux],self.tbeta[i])
-        value_eigen_cuts = Meigencuts.dot(x)
+        value_eigen_cuts = Meigencuts.dot(theta)
         self.teigenvalue = np.zeros(self.cliques_nbr)
         for aux in range(len(value_eigen_cuts)):
             i = eigencuts_idx[aux]
             self.teigenvalue[i] = min(value_eigen_cuts[aux],self.teigenvalue[i])
-        value_fixed_cuts = self.Mfixedcuts.dot(x)
+        value_fixed_cuts = self.Mfixedcuts.dot(theta)
         self.tfixedcuts = np.array([min(value_fixed_cuts[2*i],value_fixed_cuts[2*i+1]) for i in range(len(value_fixed_cuts)//2)])
         
-        obj_value_x = self.offset-0.5*(x-self.xbar).dot(self.hessian.dot(x-self.xbar))+self.tbeta.sum()+self.tfixedcuts.sum()+np.array([self.SVM[idx_clique]*self.teigenvalue[idx_clique] for idx_clique in range(self.cliques_nbr)]).sum()
-        self.grad_norm = self.kappa * np.linalg.norm(x-self.xbar)
-        self.xval = x
-        self.alpha_val = x[:self.N]
-        self.beta_val = x[self.N:self.N+self.n]
-        self.gamma_val = x[self.N+self.n:self.N+2*self.n]
-        self.lambda_f_val = x[self.N+2*self.n :self.N+2*self.n+self.cl ]
-        self.lambda_t_val = x[self.N+2*self.n+self.cl : self.N+2*self.n+2*self.cl ]
-        self.eta_val = x[self.N+2*self.n+2*self.cl:]
-        return obj_value_x,max(obj_value_x,UB)
+        obj_value_theta = self.offset-0.5*(theta-self.thetabar).dot(self.hessian.dot(theta-self.thetabar))+self.tbeta.sum()+self.tfixedcuts.sum()+np.array([self.rho[idx_clique]*self.teigenvalue[idx_clique] for idx_clique in range(self.cliques_nbr)]).sum()
+        self.grad_norm = self.kappa * np.linalg.norm(theta-self.thetabar)
+        self.thetaval = theta
+        self.alpha_val = theta[:self.N]
+        self.beta_val = theta[self.N:self.N+self.n]
+        self.gamma_val = theta[self.N+self.n:self.N+2*self.n]
+        self.lambda_f_val = theta[self.N+2*self.n :self.N+2*self.n+self.cl ]
+        self.lambda_t_val = theta[self.N+2*self.n+self.cl : self.N+2*self.n+2*self.cl ]
+        self.eta_val = theta[self.N+2*self.n+2*self.cl:]
+        return obj_value_theta,max(obj_value_theta,UB)
     
     
     def __initialize_G_cutting_planes(self):
@@ -762,23 +762,23 @@ class dualACOPFsolver():
     def value(self,alpha, beta, gamma, lambda_f, lambda_t, eta):
         """Function to evaluate a dual solution. No side effect on the class attributes. """
         Fval = 0
-        x = np.concatenate([alpha, beta, gamma, lambda_f, lambda_t, eta])
+        theta = np.concatenate([alpha, beta, gamma, lambda_f, lambda_t, eta])
         for idx_clique in range(self.cliques_nbr):
-            U,s = self.__SVD(x[self.vars[idx_clique]],idx_clique)
-            Fval+= self.SVM[idx_clique]* min(0,s.min()) 
+            U,s = self.__SVD(theta[self.vars[idx_clique]],idx_clique)
+            Fval+= self.rho[idx_clique]* min(0,s.min()) 
         Gval = self.__G_value_oracle(alpha, beta, gamma, lambda_f, lambda_t)
         return Gval + Fval
     
     def certified_value(self,alpha, beta, gamma, lambda_f, lambda_t, eta):
         """Function to evaluate a dual solution, based on the SVD certificates. No side effect on the class attributes. """
         Fval = 0
-        x = np.concatenate([alpha, beta, gamma, lambda_f, lambda_t, eta])
+        theta = np.concatenate([alpha, beta, gamma, lambda_f, lambda_t, eta])
         for idx_clique in range(self.cliques_nbr):
-            U,s = self.__SVD(x[self.vars[idx_clique]],idx_clique)
-            matrix = (self.__matrix_operator(x[self.vars[idx_clique]],idx_clique)).toarray()
+            U,s = self.__SVD(theta[self.vars[idx_clique]],idx_clique)
+            matrix = (self.__matrix_operator(theta[self.vars[idx_clique]],idx_clique)).toarray()
             epsilon = matrix - (U).dot(np.diag(s)).dot(np.conj(U.T))
             shift,_ = gershgorin_bounds(epsilon)
-            Fval+= self.SVM[idx_clique]* min(0,s.min()+shift) 
+            Fval+= self.rho[idx_clique]* min(0,s.min()+shift) 
                     
         Gval = self.__G_value_oracle(alpha, beta, gamma, lambda_f, lambda_t)
         return Gval + Fval
@@ -791,7 +791,7 @@ class dualACOPFsolver():
         self.lambda_f_val = self.lambda_f_ref = lambda_f
         self.lambda_t_val = self.lambda_t_ref = lambda_t
         self.eta_val = self.eta_bar =  eta
-        self.xbar = self.xval = np.concatenate([self.alpha_val, self.beta_val, self.gamma_val,self.lambda_f_val,self.lambda_t_val, self.eta_val])
+        self.thetabar = self.thetaval = np.concatenate([self.alpha_val, self.beta_val, self.gamma_val,self.lambda_f_val,self.lambda_t_val, self.eta_val])
         self.initial_values_set = True
         
     def solve(self,kappa0):
@@ -826,7 +826,7 @@ class dualACOPFsolver():
             self.lambda_f_val = self.lambda_f_ref = np.zeros(self.cl)
             self.lambda_t_val = self.lambda_t_ref = np.zeros(self.cl)
             self.eta_val = self.eta_bar =  np.zeros(self.eta_nbr)
-            self.xbar = self.xval = np.concatenate([self.alpha_val, self.beta_val, self.gamma_val,self.lambda_f_val,self.lambda_t_val, self.eta_val])
+            self.thetabar = self.thetaval = np.concatenate([self.alpha_val, self.beta_val, self.gamma_val,self.lambda_f_val,self.lambda_t_val, self.eta_val])
             self.initial_values_set, self.warmstart = True, False
         
         ##############################################################################################
@@ -835,8 +835,8 @@ class dualACOPFsolver():
         
         Fval = 0
         for idx_clique in range(self.cliques_nbr):
-            U,s = self.__SVD(self.xval[self.vars[idx_clique]],idx_clique)
-            Fval+= self.SVM[idx_clique]* min(0,s.min())
+            U,s = self.__SVD(self.thetaval[self.vars[idx_clique]],idx_clique)
+            Fval+= self.rho[idx_clique]* min(0,s.min())
             self.__add_eigencuts(U,s,idx_clique)
             
         self.error_bar = self.error = Fval
@@ -880,8 +880,8 @@ class dualACOPFsolver():
             U,s,Fval = {},{},0
             self.errors_by_clique = [0]*self.cliques_nbr
             for idx_clique in range(self.cliques_nbr):
-                U[idx_clique],s[idx_clique] = self.__SVD(self.xval[self.vars[idx_clique]],idx_clique)
-                Fval+= self.SVM[idx_clique]* min(0,s[idx_clique].min())
+                U[idx_clique],s[idx_clique] = self.__SVD(self.thetaval[self.vars[idx_clique]],idx_clique)
+                Fval+= self.rho[idx_clique]* min(0,s[idx_clique].min())
                 self.errors_by_clique[idx_clique] = min(0,s[idx_clique].min())
             self.oracleTime = time.time()-t0
             self.error = Fval
@@ -940,7 +940,7 @@ class dualACOPFsolver():
                 self.lambda_f_ref = self.lambda_f_val
                 self.lambda_t_ref = self.lambda_t_val
                 self.eta_ref = self.eta_val
-                self.xbar = self.xval
+                self.thetabar = self.thetaval
                 self.serious_step_number+=1
                 self.consecutive_null_step = 0
                  
@@ -968,7 +968,7 @@ class dualACOPFsolver():
             #Add cutting planes
             grad_beta = self.__G_gradient_beta(self.beta_val)
             value_function_beta = self.__G_value_beta(self.beta_val)
-            liste1 = [(self.SVM[idx_clique]*self.teigenvalue[idx_clique]-self.SVM[idx_clique]* min(0,s[idx_clique].min())) for idx_clique in range(self.cliques_nbr)]
+            liste1 = [(self.rho[idx_clique]*self.teigenvalue[idx_clique]-self.rho[idx_clique]* min(0,s[idx_clique].min())) for idx_clique in range(self.cliques_nbr)]
             liste2 = [(self.tbeta[i]-value_function_beta[i]) for i in range(self.n)]
             liste = liste1+liste2
             somme = sum(liste)
