@@ -46,8 +46,9 @@ class dualACOPFsolver():
         
         Parameters
         ----------
-        filepath : string
-            Location of the .m file in MATPOWER data format.
+        ACOPF : ACOPF instance (cf instance.py)
+        
+        config: dict
 
         -------
         Load the model.
@@ -103,11 +104,11 @@ class dualACOPFsolver():
                
         #Build T and S matrices
         self.S,self.T = {},{}
-        nu_counter = 0
-        self.positive_nu, self.negative_nu = {}, {}
+        eta_counter = 0
+        self.positive_eta, self.negative_eta = {}, {}
         for clique_idx in range(self.cliques_nbr):
-            self.positive_nu[clique_idx] = []
-            self.negative_nu[clique_idx] = []
+            self.positive_eta[clique_idx] = []
+            self.negative_eta[clique_idx] = []
             self.S[clique_idx], self.T[clique_idx] = [],[]
         for clique_idx in range(self.cliques_nbr):
             nc = self.ncliques[clique_idx]
@@ -119,9 +120,9 @@ class dualACOPFsolver():
                 self.T[clique_idx].append(coo_matrix(([1], ([local_index_bus_b],[local_index_bus_b])), shape = (nc,nc)).tocsc())
                 local_index_bus_b_father = self.localBusIdx[clique_father_idx,global_idx_bus_b]
                 self.S[clique_father_idx].append(coo_matrix(([1], ([local_index_bus_b_father],[local_index_bus_b_father])), shape = (nc_father,nc_father)).tocsc())
-                self.positive_nu[clique_idx].append(nu_counter)
-                self.negative_nu[clique_father_idx].append(nu_counter)
-                nu_counter+=1
+                self.positive_eta[clique_idx].append(eta_counter)
+                self.negative_eta[clique_father_idx].append(eta_counter)
+                eta_counter+=1
                 
             for global_idx_bus_b,global_idx_bus_a in itertools.combinations(self.cliques_intersection[clique_idx], 2):
                 assert(global_idx_bus_b<global_idx_bus_a)
@@ -135,17 +136,17 @@ class dualACOPFsolver():
                 self.T[clique_idx].append(0.5j*(ref-ref.H))
                 self.S[clique_father_idx].append(0.5*(ref_father+ref_father.H))
                 self.S[clique_father_idx].append(0.5j*(ref_father-ref_father.H))
-                self.positive_nu[clique_idx].append(nu_counter)
-                self.negative_nu[clique_father_idx].append(nu_counter)
-                nu_counter+=1
-                self.positive_nu[clique_idx].append(nu_counter)
-                self.negative_nu[clique_father_idx].append(nu_counter)
-                nu_counter+=1
-        self.nu_nbr = nu_counter
-        del nu_counter   
+                self.positive_eta[clique_idx].append(eta_counter)
+                self.negative_eta[clique_father_idx].append(eta_counter)
+                eta_counter+=1
+                self.positive_eta[clique_idx].append(eta_counter)
+                self.negative_eta[clique_father_idx].append(eta_counter)
+                eta_counter+=1
+        self.eta_nbr = eta_counter
+        del eta_counter   
         for clique_idx in range(self.cliques_nbr):
-            assert(len(self.S[clique_idx]) == len(self.negative_nu[clique_idx]) )
-            assert(len(self.T[clique_idx]) == len(self.positive_nu[clique_idx]) )
+            assert(len(self.S[clique_idx]) == len(self.negative_eta[clique_idx]) )
+            assert(len(self.T[clique_idx]) == len(self.positive_eta[clique_idx]) )
         #Testing
         for code in self.S:
             
@@ -312,11 +313,11 @@ class dualACOPFsolver():
                     Tcols.append(nc+2*kc+lc+id_assignment)
                     Tdata.append(self.Nt[idx_clique,global_idx_line][i,j]/self.scaling_lambda_t[global_idx_line])     
             
-            #Nu coefficients related to T
-            assert(len(self.T[idx_clique]) == len(self.positive_nu[idx_clique]))
-            for id_assignment, global_nu_id in enumerate(self.positive_nu[idx_clique]):
+            #eta coefficients related to T
+            assert(len(self.T[idx_clique]) == len(self.positive_eta[idx_clique]))
+            for id_assignment, global_eta_id in enumerate(self.positive_eta[idx_clique]):
                 i_list,j_list = self.T[idx_clique][id_assignment].nonzero()
-                self.vars[idx_clique].append(self.N+2*self.n+2*self.cl+global_nu_id)
+                self.vars[idx_clique].append(self.N+2*self.n+2*self.cl+global_eta_id)
                 for aux in range(len(i_list)):
                     i,j = i_list[aux],j_list[aux]
                     if (i,j) in dico_pairs_to_indexes:
@@ -331,11 +332,11 @@ class dualACOPFsolver():
                     Tcols.append(nc+2*kc+2*lc+id_assignment)
                     Tdata.append(self.T[idx_clique][id_assignment][i,j])
                     
-            #Nu coefficients related to S
-            lenPc = len(self.positive_nu[idx_clique])
-            for id_assignment, global_nu_id in enumerate(self.negative_nu[idx_clique]):
+            #eta coefficients related to S
+            lenPc = len(self.positive_eta[idx_clique])
+            for id_assignment, global_eta_id in enumerate(self.negative_eta[idx_clique]):
                 i_list,j_list = self.S[idx_clique][id_assignment].nonzero()
-                self.vars[idx_clique].append(self.N+2*self.n+2*self.cl+global_nu_id)
+                self.vars[idx_clique].append(self.N+2*self.n+2*self.cl+global_eta_id)
                 for aux in range(len(i_list)):
                     i,j = i_list[aux],j_list[aux]
                     if (i,j) in dico_pairs_to_indexes:
@@ -350,13 +351,13 @@ class dualACOPFsolver():
                     Tcols.append(nc+2*kc+2*lc+lenPc+id_assignment)
                     Tdata.append(-self.S[idx_clique][id_assignment][i,j])
                     
-            nvarc = nc+2*kc+2*lc+lenPc + len(self.negative_nu[idx_clique])
+            nvarc = nc+2*kc+2*lc+lenPc + len(self.negative_eta[idx_clique])
             assert(nvarc == len(self.vars[idx_clique]))
             self.MO[idx_clique] = coo_matrix((Tdata,(Trows,Tcols)),shape = (len(self.dual_matrix_rows[idx_clique]),nvarc)).tocsc()
             self.MO_transpose[idx_clique] = coo_matrix((Tdata,(Tcols,Trows)),shape = (nvarc,len(self.dual_matrix_rows[idx_clique]))).tocsc()
             
             self.vars[idx_clique] = np.array(self.vars[idx_clique])
-        self.d = self.N+2*self.n+2*self.cl+self.nu_nbr
+        self.d = self.N+2*self.n+2*self.cl+self.eta_nbr
         cl = np.concatenate([idx_clique*np.ones(len(self.vars[idx_clique])) for idx_clique in range(self.cliques_nbr)])
         global_vars = np.concatenate([self.vars[idx_clique] for idx_clique in range(self.cliques_nbr)])
         self.clique_to_vars_matrix = coo_matrix((np.ones(len(cl)),(global_vars,cl)),shape = (self.d,self.cliques_nbr)).tocsc()
@@ -712,7 +713,7 @@ class dualACOPFsolver():
         self.gamma_val = x[self.N+self.n:self.N+2*self.n]
         self.lambda_f_val = x[self.N+2*self.n :self.N+2*self.n+self.cl ]
         self.lambda_t_val = x[self.N+2*self.n+self.cl : self.N+2*self.n+2*self.cl ]
-        self.nu_val = x[self.N+2*self.n+2*self.cl:]
+        self.eta_val = x[self.N+2*self.n+2*self.cl:]
         return obj_value_x,max(obj_value_x,UB)
     
     
@@ -758,20 +759,20 @@ class dualACOPFsolver():
                                                
     """External routines """
     
-    def value(self,alpha, beta, gamma, lambda_f, lambda_t, nu):
+    def value(self,alpha, beta, gamma, lambda_f, lambda_t, eta):
         """Function to evaluate a dual solution. No side effect on the class attributes. """
         Fval = 0
-        x = np.concatenate([alpha, beta, gamma, lambda_f, lambda_t, nu])
+        x = np.concatenate([alpha, beta, gamma, lambda_f, lambda_t, eta])
         for idx_clique in range(self.cliques_nbr):
             U,s = self.__SVD(x[self.vars[idx_clique]],idx_clique)
             Fval+= self.SVM[idx_clique]* min(0,s.min()) 
         Gval = self.__G_value_oracle(alpha, beta, gamma, lambda_f, lambda_t)
         return Gval + Fval
     
-    def certified_value(self,alpha, beta, gamma, lambda_f, lambda_t, nu):
+    def certified_value(self,alpha, beta, gamma, lambda_f, lambda_t, eta):
         """Function to evaluate a dual solution, based on the SVD certificates. No side effect on the class attributes. """
         Fval = 0
-        x = np.concatenate([alpha, beta, gamma, lambda_f, lambda_t, nu])
+        x = np.concatenate([alpha, beta, gamma, lambda_f, lambda_t, eta])
         for idx_clique in range(self.cliques_nbr):
             U,s = self.__SVD(x[self.vars[idx_clique]],idx_clique)
             matrix = (self.__matrix_operator(x[self.vars[idx_clique]],idx_clique)).toarray()
@@ -782,15 +783,15 @@ class dualACOPFsolver():
         Gval = self.__G_value_oracle(alpha, beta, gamma, lambda_f, lambda_t)
         return Gval + Fval
     
-    def set_inital_values(self,alpha, beta, gamma, lambda_f, lambda_t, nu):
+    def set_inital_values(self,alpha, beta, gamma, lambda_f, lambda_t, eta):
         """Setting initial variables for a warm-start """
         self.alpha_val = self.alpha_ref =  alpha
         self.beta_val = self.beta_ref = beta
         self.gamma_val = self.gamma_ref = gamma 
         self.lambda_f_val = self.lambda_f_ref = lambda_f
         self.lambda_t_val = self.lambda_t_ref = lambda_t
-        self.nu_val = self.nu_bar =  nu
-        self.xbar = self.xval = np.concatenate([self.alpha_val, self.beta_val, self.gamma_val,self.lambda_f_val,self.lambda_t_val, self.nu_val])
+        self.eta_val = self.eta_bar =  eta
+        self.xbar = self.xval = np.concatenate([self.alpha_val, self.beta_val, self.gamma_val,self.lambda_f_val,self.lambda_t_val, self.eta_val])
         self.initial_values_set = True
         
     def solve(self,kappa0):
@@ -824,8 +825,8 @@ class dualACOPFsolver():
             self.gamma_val = self.gamma_ref = val_init_gamma 
             self.lambda_f_val = self.lambda_f_ref = np.zeros(self.cl)
             self.lambda_t_val = self.lambda_t_ref = np.zeros(self.cl)
-            self.nu_val = self.nu_bar =  np.zeros(self.nu_nbr)
-            self.xbar = self.xval = np.concatenate([self.alpha_val, self.beta_val, self.gamma_val,self.lambda_f_val,self.lambda_t_val, self.nu_val])
+            self.eta_val = self.eta_bar =  np.zeros(self.eta_nbr)
+            self.xbar = self.xval = np.concatenate([self.alpha_val, self.beta_val, self.gamma_val,self.lambda_f_val,self.lambda_t_val, self.eta_val])
             self.initial_values_set, self.warmstart = True, False
         
         ##############################################################################################
@@ -843,7 +844,7 @@ class dualACOPFsolver():
         self.current_value_bar = self.current_value = self.Gval + Fval
         del Fval
         self.best_value= self.current_value
-        self.best_certified_value = self.certified_value(self.alpha_val, self.beta_val, self.gamma_val, self.lambda_f_val, self.lambda_t_val, self.nu_val)
+        self.best_certified_value = self.certified_value(self.alpha_val, self.beta_val, self.gamma_val, self.lambda_f_val, self.lambda_t_val, self.eta_val)
         self.Gval_bar = self.Gval
         self.hessian = self.kappa*identity(self.d)
         self.invHessian = (1/self.kappa)*identity(self.d)
@@ -886,7 +887,7 @@ class dualACOPFsolver():
             self.error = Fval
             self.current_value = self.Gval+ Fval
             self.best_value = max(self.current_value,self.best_value)
-            self.best_certified_value = max(self.certified_value(self.alpha_val, self.beta_val, self.gamma_val, self.lambda_f_val, self.lambda_t_val, self.nu_val),self.best_certified_value)
+            self.best_certified_value = max(self.certified_value(self.alpha_val, self.beta_val, self.gamma_val, self.lambda_f_val, self.lambda_t_val, self.eta_val),self.best_certified_value)
             values_logger.append(self.best_certified_value)
             if self.current_value>ub_for_infeas_detection:
                 self.__info(True)
@@ -938,7 +939,7 @@ class dualACOPFsolver():
                 self.gamma_ref = self.gamma_val
                 self.lambda_f_ref = self.lambda_f_val
                 self.lambda_t_ref = self.lambda_t_val
-                self.nu_ref = self.nu_val
+                self.eta_ref = self.eta_val
                 self.xbar = self.xval
                 self.serious_step_number+=1
                 self.consecutive_null_step = 0
