@@ -10,6 +10,7 @@ import time, itertools, operator,osqp
 import numpy as np
 from scipy.sparse import   coo_matrix,  identity, csc_matrix, hstack,vstack
 from tools import argmin_cumsum,gershgorin_bounds
+from fractions import Fraction
 ###################Fixed parameters####################################
 #My zeros
 myEpsgradient = myZeroforCosts = 1E-6
@@ -520,7 +521,27 @@ class dualACOPFsolver():
         vector_version = self.MO[idx_clique].dot(xc)
         nc = self.ncliques[idx_clique]
         return coo_matrix((vector_version, (self.dual_matrix_rows[idx_clique],self.dual_matrix_cols[idx_clique])), shape = (nc,nc))
-                              
+    
+    # def __matrix_operator_rationals(self,xc,idx_clique):
+    #     """
+    #     Parameters
+    #     ----------
+    #     xc : numpy array of fractions.
+    #     idx_clique : int.
+    #     Returns
+    #     -------
+    #     res : the dual matrix associated with clique c
+    #     """
+    #     for m in xc:
+    #         assert(type(m)==Fraction)
+        
+    #     # self.MO[idx_clique]
+        
+    #     # vector_version = self.MO[idx_clique].dot(xc)
+    #     # nc = self.ncliques[idx_clique]
+    #     # return coo_matrix((vector_version, (self.dual_matrix_rows[idx_clique],self.dual_matrix_cols[idx_clique])), shape = (nc,nc))
+             
+    
     def __SVD(self,xc,idx_clique):
         matrix = (self.__matrix_operator(xc,idx_clique)).toarray()
         s,U = np.linalg.eigh(matrix)
@@ -779,7 +800,6 @@ class dualACOPFsolver():
             epsilon = matrix - (U).dot(np.diag(s)).dot(np.conj(U.T))
             shift,_ = gershgorin_bounds(epsilon)
             Fval+= self.rho[idx_clique]* min(0,s.min()+shift) 
-                    
         Gval = self.__G_value_oracle(alpha, beta, gamma, lambda_f, lambda_t)
         return Gval + Fval
     
