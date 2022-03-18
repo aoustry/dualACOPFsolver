@@ -115,10 +115,11 @@ def store_clean_table_gap_progress(df):
     table['UB'] = [("%.6g" % best_obj) for best_obj in df['IPOPT UB']]
     table['Cert. gap reduction'] = [("%.2g" % best_obj)+"%" for best_obj in df['Reduction of certified gap (%)']]
     table['Est. gap reduction'] = [("%.2g" % best_obj)+"%" for best_obj in df['Reduction of estimated gap (%)']]
+    table['Time overhead'] = [("%.4g" % x) for x in df['overhead']]
     table = table.dropna()
     table['aux'] = [x for x in df['Reduction of certified gap (%)']]
     table = table.sort_values(by=['aux'],ascending=False)
-    print(table[['Instance', 'UB','Est. gap reduction','Cert. gap reduction']].to_latex("stats_gap_progress.txt", index = False))
+    print(table[['Instance', 'UB','Est. gap reduction','Cert. gap reduction','Time overhead']].to_latex("stats_gap_progress.txt", index = False))
 
 def display_agg_stats(df):
     print('Average overhead',gmean(df['overhead']))
