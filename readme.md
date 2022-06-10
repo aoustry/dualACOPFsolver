@@ -24,7 +24,7 @@ Executing
 python3 main.py
 ```
 
-will run the numerical experiments presented in the paper "A. Oustry, C. D'Ambrosio, L. Liberti, M. Ruiz, Certified and accurate SDP bounds for the ACOPF problem" (submitted, under review).  Executing 
+will run the numerical experiments presented in the paper "A. Oustry, C. D'Ambrosio, L. Liberti, M. Ruiz, _Certified and accurate SDP bounds for the ACOPF problem_, XXIIth Power System Computation Conference, Porto, Portugal, June 2022". Executing
 ```
 python3 stats.py
 ```
