@@ -8,7 +8,7 @@ Created on Tue Aug 24 12:44:33 2021
 
 import time, itertools, operator,osqp
 import numpy as np
-from scipy.sparse import   coo_matrix,  identity, csc_matrix, hstack,vstack
+from scipy.sparse import   coo_matrix,  identity, csc_matrix, hstack,vstack, diags
 from tools import argmin_cumsum,gershgorin_bounds
 from fractions import Fraction
 ###################Fixed parameters####################################
@@ -23,7 +23,7 @@ magnitude_init_perturb = 1E-5
 
 class dualACOPFsolver():
     
-    def __init__(self, ACOPF, config):
+    def __init__(self, ACOPF):
         """
         
         Parameters
@@ -38,7 +38,6 @@ class dualACOPFsolver():
         """
         
         self.name = ACOPF.name
-        self.config = config
         
         #Sizes
         self.baseMVA = ACOPF.baseMVA
@@ -69,8 +68,8 @@ class dualACOPFsolver():
         self.cl = ACOPF.cl
         self.clinelist, self.clinelistinv = ACOPF.clinelist, ACOPF.clinelistinv
         self.Imax = ACOPF.Imax
-        self.scaling_lambda_f = [self.config["scaling_lambda"] for line in self.clinelistinv]
-        self.scaling_lambda_t = [self.config["scaling_lambda"] for line in self.clinelistinv]
+        # self.scaling_lambda_f = [self.config["scaling_lambda"] for line in self.clinelistinv]
+        # self.scaling_lambda_t = [self.config["scaling_lambda"] for line in self.clinelistinv]
         
         #Cliques quantities
         self.cliques_nbr = ACOPF.cliques_nbr
@@ -531,14 +530,14 @@ class dualACOPFsolver():
     
     def test(self):
         
-        for i in range(2):
+        for i in range(4):
             index_offset = 0
             for idx_clique in range(self.cliques_nbr):
                 index_offset+=len(self.cliques[idx_clique])
             alpha = 40*(2*np.random.rand(index_offset)-1)
             beta,gamma = 40*(2*np.random.rand(self.n)-1),40*(2*np.random.rand(self.n)-1)
             lambda_f,lambda_t = np.zeros(self.cl),np.zeros(self.cl)
-            epsilon = 0.1
+            epsilon = 10
             
             value = self.__G_value_oracle_smoothed(alpha,beta,gamma, lambda_f,lambda_t,epsilon)
             der = self.__G_gradient_oracle_smoothed(alpha,beta,gamma, lambda_f,lambda_t,epsilon)
@@ -552,7 +551,7 @@ class dualACOPFsolver():
                 value_delta = self.__G_value_oracle_smoothed(alpha+n*d_alpha,beta+n*d_beta,gamma+n*d_gamma, lambda_f,lambda_t,epsilon)
                 der_delta = self.__G_gradient_oracle_smoothed(alpha+n*d_alpha,beta+n*d_beta,gamma+n*d_gamma, lambda_f,lambda_t,epsilon)
                 
-                # print((value_delta-value)/n-der.dot(np.concatenate([d_alpha,d_beta,d_gamma])))
+                #print((value_delta-value)/n,der.dot(np.concatenate([d_alpha,d_beta,d_gamma])))
                 # print(np.linalg.norm((der_delta-der)/n-der2*(np.concatenate([d_alpha,d_beta,d_gamma]))))
 
             eta = np.zeros(self.eta_nbr)
@@ -561,7 +560,7 @@ class dualACOPFsolver():
                 U,s = self.__SVD(theta[self.vars[idx_clique]],idx_clique)
             
             t = time.time()
-            self.value_smoothed(alpha, beta, gamma, lambda_f, lambda_t, eta,epsilon)
+            self.test_spectral_der(alpha, beta, gamma, lambda_f, lambda_t, eta,epsilon)
             print('Temps = {0}'.format(time.time()-t))
             
     def __matrix_operator(self,xc,idx_clique):
@@ -582,19 +581,19 @@ class dualACOPFsolver():
     def __SVD(self,xc,idx_clique):
         matrix = (self.__matrix_operator(xc,idx_clique)).toarray()
         s,U = np.linalg.eigh(matrix)
-        #print(np.linalg.norm(matrix-U.dot(np.diag(s)).dot(np.conj(U.T))))
         return U, s
     
     def __spectral_sftplus(self,eigenvals,epsilon):
         return sum([self._soft_plus_epsilon(el, epsilon) for el in  eigenvals])
     
     def __spectral_grad_matrix(self,U,eigenvals,epsilon):
-        print("Cette fonction peut être accelerée en utilisant du lowrank")
         der = np.array([self.sigmoid(el,epsilon) for el in eigenvals])
-        return U.dot(np.diag(der)).dot(np.conj(U.T))
+        boolean = np.absolute(der)>1e-9
+        W = U[:,boolean]
+        return  W.dot(diags(der[boolean]).dot(np.conj(W.T)))
+        
     
     def __spectral_matrix_M(self,eigenvals,epsilon):
-        print("Cette fonction peut être accelerée en utilisant du lowrank")
         xi_diag = np.diag([self.der_sigmoid_epsilon(el,epsilon) for el in eigenvals])
         nc = len(eigenvals)
         M = np.zeros((nc,nc)) + xi_diag
@@ -617,23 +616,32 @@ class dualACOPFsolver():
     def __Atilde(self, idx_clique,m_row_ind, m_col_ind , U):
         assert(U.shape[0]==self.ncliques[idx_clique])
         assert(len(m_row_ind)==len(m_col_ind))
-        X1 = [[np.conj(U[k][i]) for k in self.dual_matrix_rows[idx_clique]] for i in m_row_ind]
-        X2 = [[U[l][j] for l in self.dual_matrix_cols[idx_clique]] for j in m_col_ind]
+        X1 = np.conj(U[self.dual_matrix_rows[idx_clique],:][:,m_row_ind]) 
+        X2 = (U[self.dual_matrix_cols[idx_clique],:][:,m_col_ind])
+        #print("X1X2_test time = {0}".format(time.time()-t0))
+        #print(len(self.dual_matrix_rows[idx_clique]),X1test.shape)
+        #t0 = time.time()
+        #X1 = [[np.conj(U[k][i]) for k in self.dual_matrix_rows[idx_clique]] for i in m_row_ind]
+        #X2 = [[U[l][j] for l in self.dual_matrix_cols[idx_clique]] for j in m_col_ind]
+        #print("X1X2 time = {0}".format(time.time()-t0))
+        #print(np.linalg.norm(X1-X1test.T)+np.linalg.norm(X2-X2test.T))
         P = np.array(X1)*np.array(X2)
-        return ((self.MO[idx_clique].T).dot(P.T)).T
+        res  =((self.MO[idx_clique].T).dot(P)).T
+
+        return res
     
     def __spectral_grad(self,idx_clique,U,eigenvals,epsilon):
         grad_mat_m = self.__spectral_grad_matrix(U,eigenvals,epsilon)
         grad_mat_m_vec = grad_mat_m[self.dual_matrix_rows[idx_clique],self.dual_matrix_cols[idx_clique]]
-        return ((self.MO[idx_clique].T).dot(grad_mat_m_vec)).T
+        return (np.conj((self.MO_transpose[idx_clique])).dot(grad_mat_m_vec)).T
     
     def __spectral_hessian(self,idx_clique,U,eigenvals,epsilon):
         M, m_row_ind,m_col_ind = self.__spectral_matrix_M(eigenvals,epsilon)
-        D = np.diag(M[m_row_ind,m_col_ind])
+        D = diags(M[m_row_ind,m_col_ind])
         if len(m_row_ind)==0:
             return False,0
         At = self.__Atilde(idx_clique,m_row_ind, m_col_ind , U)
-        return True,(At.T).dot(D.dot(At))
+        return True, np.conj(At.T).dot(D.dot(At))
         
     """External routines """
     
@@ -667,11 +675,35 @@ class dualACOPFsolver():
             grad = self.__spectral_grad(idx_clique,U,-s,epsilon)
             assert(np.linalg.norm(np.imag(grad))<1e-6)
             _,H =  self.__spectral_hessian(idx_clique,U,-s,epsilon)
-            assert(np.linalg.norm(np.imag(H))<1e-6)
-            print(H) """Should be thresholded to sparsify"""
-            "To continue, keeping the sum of gradient and sparse hessian"
         Gval = self.__G_value_oracle_smoothed(alpha, beta, gamma, lambda_f, lambda_t,epsilon)
         return Gval + Fval
+    
+    def test_spectral_der(self,alpha, beta, gamma, lambda_f, lambda_t, eta,epsilon):
+        """Function to evaluate dual smooth function and derivatives """
+        theta = np.concatenate([alpha, beta, gamma, lambda_f, lambda_t, eta])
+        dtheta = (2*np.random.rand(len(theta))-1)
+        l = 1e-9
+        theta_aux = theta + l*dtheta
+        
+        for idx_clique in range(self.cliques_nbr):
+            
+            
+            U,s = self.__SVD(theta[self.vars[idx_clique]],idx_clique)
+            val = self.__spectral_sftplus(s,epsilon)
+            grad = self.__spectral_grad(idx_clique,U,s,epsilon)
+            
+            U_aux,s_aux = self.__SVD(theta_aux[self.vars[idx_clique]],idx_clique)
+            val_aux = self.__spectral_sftplus(s_aux,epsilon)
+            grad_aux = self.__spectral_grad(idx_clique,U_aux,s_aux,epsilon)
+            
+            print("------{0}--------".format(self.ncliques[idx_clique]))
+            print(s)
+            print(abs(grad.dot(dtheta[self.vars[idx_clique]])-(val_aux-val)/l))
+            # assert(np.linalg.norm(np.imag(grad))<1e-6)
+            # t0 = time.time()
+            _,H =  self.__spectral_hessian(idx_clique,U,s,epsilon)
+            print(np.linalg.norm(H.dot((dtheta[self.vars[idx_clique]]))),np.linalg.norm(H.dot((dtheta[self.vars[idx_clique]]))-(grad_aux-grad)/l))
+        
     
     def certified_value(self,alpha, beta, gamma, lambda_f, lambda_t, eta):
         """Function to evaluate a dual solution, based on the SVD certificates. No side effect on the class attributes. """
