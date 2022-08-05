@@ -8,7 +8,8 @@ Created on Tue Aug 24 12:44:33 2021
 
 import time, itertools, operator,osqp
 import numpy as np
-from scipy.sparse.linalg import eigs
+from scipy import sparse
+from scipy.sparse.linalg import eigs,spsolve
 from scipy.sparse import   coo_matrix,  identity, csc_matrix, hstack,vstack, diags
 from tools import argmin_cumsum,gershgorin_bounds
 from fractions import Fraction
@@ -740,5 +741,22 @@ class dualACOPFsolver():
         Gval = self.__G_value_oracle(alpha, beta, gamma, lambda_f, lambda_t)
         return Gval + Fval
     
-    def solve(self):
-        
+    def solve(self,epsilon):
+        """Init """
+        alpha =   np.zeros(self.N)
+        beta = np.zeros(self.n)
+        gamma = np.zeros(self.n)
+        lambda_f =  np.zeros(self.cl)
+        lambda_t =  np.zeros(self.cl)
+        eta =  np.zeros(self.eta_nbr)
+        m = self.N+2*self.n+2*self.cl+self.eta_nbr
+        a,b,c,d,e = self.N,self.N+self.n,self.N+2*self.n,self.N+2*self.n+self.cl,self.N++2*self.n+2*self.cl
+        for i in range(10):
+            
+            theta = np.concatenate([alpha, beta, gamma, lambda_f, lambda_t, eta])
+            value, gradient, sparse_hessian = self.value_smoothed_with_derivatives(alpha, beta, gamma, lambda_f, lambda_t, eta,epsilon)
+            print(value)
+            delta = spsolve(sparse_hessian,-gradient)
+            theta = theta+delta
+            alpha,beta, gamma, lambda_f,lambda_t, eta =  theta[:a],theta[a:b],theta[b:c],theta[c:d],theta[d:e],theta[e:]
+            print('Implement line search')

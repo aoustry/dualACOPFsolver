@@ -18,3 +18,4 @@ instance_config = {"lineconstraints" : lineconstraints,  "cliques_strategy":"ASP
 Instance = instance.ACOPFinstance("pglib-opf-TYP/{0}.m".format(name_instance),name_instance,instance_config)   
 R = dualACOPFsolverSmoothing.dualACOPFsolver(Instance)
 R.test()
+R.solve(10)
