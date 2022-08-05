@@ -12,7 +12,7 @@ from cases_list import instances
 import mosekACOPFsolver
 import dualACOPFsolverSmoothing
 
-name_instance = 'pglib_opf_case89_pegase'
+name_instance = 'pglib_opf_case5_pjm'
 lineconstraints = False
 instance_config = {"lineconstraints" : lineconstraints,  "cliques_strategy":"ASP"}
 Instance = instance.ACOPFinstance("pglib-opf-TYP/{0}.m".format(name_instance),name_instance,instance_config)   
