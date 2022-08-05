@@ -10,7 +10,7 @@ import time, itertools, operator,osqp
 import numpy as np
 from scipy import sparse
 from scipy.sparse.linalg import eigs,spsolve
-from scipy.sparse import   coo_matrix,  identity, csc_matrix, hstack,vstack, diags
+from scipy.sparse import   coo_matrix,  identity, csc_matrix, hstack,vstack, diags,eye
 from tools import argmin_cumsum,gershgorin_bounds
 from fractions import Fraction
 ###################Fixed parameters####################################
@@ -351,10 +351,12 @@ class dualACOPFsolver():
     
     """Oracles """          
             
-    def __G_value_oracle(self,alpha,beta,gamma, lambda_f,lambda_t):
+    def __G_value_oracle(self,theta):
         """Return the value of function G at the current solution. """
         value = 0
         offset = 0
+        a,b,c,d,e = self.N,self.N+self.n,self.N+2*self.n,self.N+2*self.n+self.cl,self.N++2*self.n+2*self.cl
+        alpha, beta,gamma, lambda_f,lambda_t = theta[:a],theta[a:b],theta[b:c],theta[c:d],theta[d:e]
         for idx_clique in range(self.cliques_nbr):
             clique = self.cliques[idx_clique]
             for global_indx in clique:
@@ -404,10 +406,13 @@ class dualACOPFsolver():
         return value + self.offset
     
     
-    def __G_value_oracle_smoothed(self,alpha,beta,gamma, lambda_f,lambda_t,epsilon):
+    def __G_value_oracle_smoothed(self,theta,epsilon):
         """Return the value of function G at the current solution. """
         value = 0
         index_offset = 0
+        a,b,c,d,e = self.N,self.N+self.n,self.N+2*self.n,self.N+2*self.n+self.cl,self.N++2*self.n+2*self.cl
+        alpha, beta,gamma, lambda_f,lambda_t = theta[:a],theta[a:b],theta[b:c],theta[c:d],theta[d:e]
+        
         for idx_clique in range(self.cliques_nbr):
             clique = self.cliques[idx_clique]
             for global_indx in clique:
@@ -446,9 +451,11 @@ class dualACOPFsolver():
         return value + self.offset
     
     
-    def __G_gradient_oracle_smoothed(self,alpha,beta,gamma, lambda_f,lambda_t,epsilon):
+    def __G_gradient_oracle_smoothed(self,theta,epsilon):
         """Return the gradient of the smoothed function G at the current solution. """
         index_offset = 0
+        a,b,c,d,e = self.N,self.N+self.n,self.N+2*self.n,self.N+2*self.n+self.cl,self.N++2*self.n+2*self.cl
+        alpha, beta,gamma, lambda_f,lambda_t = theta[:a],theta[a:b],theta[b:c],theta[c:d],theta[d:e]
         grad_alpha = np.zeros(len(alpha))
         for idx_clique in range(self.cliques_nbr):
             clique = self.cliques[idx_clique]
@@ -489,8 +496,10 @@ class dualACOPFsolver():
         
         return np.concatenate([grad_alpha, grad_beta, grad_gamma])
     
-    def __G_hessian_oracle_smoothed(self,alpha,beta,gamma, lambda_f,lambda_t,epsilon):
+    def __G_hessian_oracle_smoothed(self,theta,epsilon):
         """Return the hessian diagonal of the smoothed function G at the current solution. """
+        a,b,c,d,e = self.N,self.N+self.n,self.N+2*self.n,self.N+2*self.n+self.cl,self.N++2*self.n+2*self.cl
+        alpha, beta,gamma, lambda_f,lambda_t = theta[:a],theta[a:b],theta[b:c],theta[c:d],theta[d:e]
         index_offset = 0
         hess_alpha = np.zeros(len(alpha))
         for idx_clique in range(self.cliques_nbr):
@@ -544,21 +553,23 @@ class dualACOPFsolver():
             print(len(alpha),len(beta),len(gamma),len(eta))
             n = 1e-8
             t = time.time()
-            value, gradient, sparse_hessian = self.value_smoothed_with_derivatives(alpha, beta, gamma, lambda_f, lambda_t, eta,epsilon)
+            theta = np.concatenate([alpha, beta, gamma, lambda_f, lambda_t, eta])
+            value, gradient, sparse_hessian = self.value_smoothed_with_derivatives(theta,epsilon)
             print('Temps = {0}'.format(time.time()-t))
             v,w= eigs(sparse_hessian,k=6,sigma = 0)
             #print(sparse_hessian)
             print((v))
             
-            # for i in range(5):
-            #     d_alpha = 2*np.random.rand(index_offset)-1
-            #     d_beta,d_gamma = 2*np.random.rand(self.n)-1,2*np.random.rand(self.n)-1
-            #     d_eta = 2*np.random.rand(self.eta_nbr)-1
-            #     d_lambda_f = d_lambda_t = np.zeros(0)
-            #     delta = np.concatenate([d_alpha,d_beta,d_gamma,d_lambda_f , d_lambda_t,d_eta])
-            #     value2, gradient2, sparse_hessian2 = self.value_smoothed_with_derivatives(alpha+n*d_alpha, beta+n*d_beta, gamma+n*d_gamma, lambda_f+n*d_lambda_f, lambda_t+n*d_lambda_t, eta+n*d_eta,epsilon)
-            #     print(np.linalg.norm(((value2-value)/n)-gradient.dot(delta)),abs(gradient.dot(delta)))
-            #     print(np.linalg.norm(((gradient2-gradient)/n)-sparse_hessian.dot(delta)),np.linalg.norm(sparse_hessian.dot(delta)))
+            for i in range(5):
+                d_alpha = 2*np.random.rand(index_offset)-1
+                d_beta,d_gamma = 2*np.random.rand(self.n)-1,2*np.random.rand(self.n)-1
+                d_eta = 2*np.random.rand(self.eta_nbr)-1
+                d_lambda_f = d_lambda_t = np.zeros(0)
+                delta = np.concatenate([d_alpha,d_beta,d_gamma,d_lambda_f , d_lambda_t,d_eta])
+                theta_delta = theta+n*delta
+                value2, gradient2, sparse_hessian2 = self.value_smoothed_with_derivatives(theta_delta,epsilon)
+                print(np.linalg.norm(((value2-value)/n)-gradient.dot(delta)),abs(gradient.dot(delta)))
+                print(np.linalg.norm(((gradient2-gradient)/n)-sparse_hessian.dot(delta)),np.linalg.norm(sparse_hessian.dot(delta)))
 
             
     def __matrix_operator(self,xc,idx_clique):
@@ -632,34 +643,31 @@ class dualACOPFsolver():
         
     """External routines """
     
-    def value(self,alpha, beta, gamma, lambda_f, lambda_t, eta):
+    def value(self,theta):
         """Function to evaluate a dual solution. No side effect on the class attributes. """
         Fval = 0
-        theta = np.concatenate([alpha, beta, gamma, lambda_f, lambda_t, eta])
         for idx_clique in range(self.cliques_nbr):
             U,s = self.__SVD(theta[self.vars[idx_clique]],idx_clique)
             Fval+= self.rho[idx_clique]* min(0,s.min()) 
-        Gval = self.__G_value_oracle(alpha, beta, gamma, lambda_f, lambda_t)
+        Gval = self.__G_value_oracle(theta)
         return Gval + Fval
     
-    def value_smoothed(self,alpha, beta, gamma, lambda_f, lambda_t, eta,epsilon):
+    def value_smoothed(self,theta,epsilon,mu):
         """Function to evaluate a dual solution. No side effect on the class attributes. """
         Fval = 0
-        theta = np.concatenate([alpha, beta, gamma, lambda_f, lambda_t, eta])
         for idx_clique in range(self.cliques_nbr):
             U,s = self.__SVD(theta[self.vars[idx_clique]],idx_clique)
             Fval+= -self.rho[idx_clique]* self.__spectral_sftplus(-s,epsilon)
-        Gval = self.__G_value_oracle_smoothed(alpha, beta, gamma, lambda_f, lambda_t,epsilon)
-        return Gval + Fval
+        Gval = self.__G_value_oracle_smoothed(theta,epsilon)
+        return Gval + Fval - 0.5*mu*np.linalg.norm(theta)**2
     
-    def value_smoothed_with_derivatives(self,alpha, beta, gamma, lambda_f, lambda_t, eta,epsilon):
+    def value_smoothed_with_derivatives(self,theta,epsilon,mu):
         """Function to evaluate dual smooth function and derivatives """
-        theta = np.concatenate([alpha, beta, gamma, lambda_f, lambda_t, eta])
-        value = self.__G_value_oracle_smoothed(alpha, beta, gamma, lambda_f, lambda_t,epsilon)
-        gradient = np.zeros(len(theta))
-        gradient_g = self.__G_gradient_oracle_smoothed(alpha,beta,gamma, lambda_f,lambda_t,epsilon)
-        gradient[:len(gradient_g)] = gradient_g
-        hessian_g = self.__G_hessian_oracle_smoothed(alpha,beta,gamma, lambda_f,lambda_t,epsilon)
+        value = self.__G_value_oracle_smoothed(theta,epsilon)
+        gradient = -theta*mu#np.zeros(len(theta))
+        gradient_g = self.__G_gradient_oracle_smoothed(theta,epsilon)
+        gradient[:len(gradient_g)]+= gradient_g
+        hessian_g = self.__G_hessian_oracle_smoothed(theta,epsilon)
         full_hessian = {(i,i):hessian_g[i] for i in range(len(hessian_g))}
         for idx_clique in range(self.cliques_nbr):
             U,s = self.__SVD(theta[self.vars[idx_clique]],idx_clique)
@@ -678,11 +686,10 @@ class dualACOPFsolver():
                             full_hessian[(i,j)]=H[aux1,aux2]
         hdata,hrc = list(full_hessian.values()), [list(t) for t in zip(*(list(full_hessian.keys())))]
         sparse_hessian = coo_matrix((hdata,(hrc[0],hrc[1])),shape = (len(theta),len(theta))).tocsc()
-        return value, gradient, sparse_hessian 
+        return value- 0.5*mu*np.linalg.norm(theta)**2, gradient, sparse_hessian - mu * eye(len(theta))
     
-    def test_spectral_der(self,alpha, beta, gamma, lambda_f, lambda_t, eta,epsilon):
+    def test_spectral_der(self,theta,epsilon):
         """Function to evaluate dual smooth function and derivatives """
-        theta = np.concatenate([alpha, beta, gamma, lambda_f, lambda_t, eta])
         dtheta = (2*np.random.rand(len(theta))-1)
         l = 1e-6
         theta_aux = theta + l*dtheta
@@ -728,35 +735,45 @@ class dualACOPFsolver():
             # print("Testhtilde = {0}".format(np.linalg.norm(Htildetest-Htilde[m_row_ind,m_col_ind])))
             # print('La fonction Atilde semble bien codée.')
     
-    def certified_value(self,alpha, beta, gamma, lambda_f, lambda_t, eta):
+    def certified_value(self,theta):
         """Function to evaluate a dual solution, based on the SVD certificates. No side effect on the class attributes. """
         Fval = 0
-        theta = np.concatenate([alpha, beta, gamma, lambda_f, lambda_t, eta])
         for idx_clique in range(self.cliques_nbr):
             U,s = self.__SVD(theta[self.vars[idx_clique]],idx_clique)
             matrix = (self.__matrix_operator(theta[self.vars[idx_clique]],idx_clique)).toarray()
             epsilon = matrix - (U).dot(np.diag(s)).dot(np.conj(U.T))
             shift,_ = gershgorin_bounds(epsilon)
             Fval+= self.rho[idx_clique]* min(0,s.min()+shift) 
-        Gval = self.__G_value_oracle(alpha, beta, gamma, lambda_f, lambda_t)
+        Gval = self.__G_value_oracle(theta)
         return Gval + Fval
     
-    def solve(self,epsilon):
+    def solve(self,epsilon,mu):
         """Init """
-        alpha =   np.zeros(self.N)
-        beta = np.zeros(self.n)
-        gamma = np.zeros(self.n)
-        lambda_f =  np.zeros(self.cl)
-        lambda_t =  np.zeros(self.cl)
-        eta =  np.zeros(self.eta_nbr)
         m = self.N+2*self.n+2*self.cl+self.eta_nbr
-        a,b,c,d,e = self.N,self.N+self.n,self.N+2*self.n,self.N+2*self.n+self.cl,self.N++2*self.n+2*self.cl
-        for i in range(10):
-            
-            theta = np.concatenate([alpha, beta, gamma, lambda_f, lambda_t, eta])
-            value, gradient, sparse_hessian = self.value_smoothed_with_derivatives(alpha, beta, gamma, lambda_f, lambda_t, eta,epsilon)
-            print(value)
+        theta = np.zeros(m)
+        alpha_param = 0.25
+        beta_param = 0.5
+        sp = np.inf
+        while sp > 1e-6:
+            print('--------------------------')
+            value, gradient, sparse_hessian = self.value_smoothed_with_derivatives(theta,epsilon,mu)
+            print("Approx value = {0}".format(value))
+            exact_value = self.value(theta)
+            print("Exact value = {0}".format(exact_value))
             delta = spsolve(sparse_hessian,-gradient)
-            theta = theta+delta
-            alpha,beta, gamma, lambda_f,lambda_t, eta =  theta[:a],theta[a:b],theta[b:c],theta[c:d],theta[d:e],theta[e:]
-            print('Implement line search')
+            t = 1
+            theta_aux = theta+t*delta
+            sp = gradient.dot(delta)
+            value_aux = self.value_smoothed(theta_aux,epsilon,mu)
+            print("Scalar prod = {0}".format(sp))
+            inner_it = 0
+            while value_aux<= value + alpha_param*t*sp:
+                t =  beta_param*t
+                theta_aux = theta+t*delta
+                value_aux = self.value_smoothed(theta_aux,epsilon,mu)
+                inner_it+=1
+            theta = theta_aux
+            print("Inner iterations nbr = {0}".format(inner_it))
+            print('Theta norm = {0}'.format(np.linalg.norm(theta)))
+            print('gradient norm = {0}'.format(np.linalg.norm(gradient)))
+            

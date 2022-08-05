@@ -12,10 +12,15 @@ from cases_list import instances
 import mosekACOPFsolver
 import dualACOPFsolverSmoothing
 
-name_instance = 'pglib_opf_case5_pjm'
+name_instance = 'pglib_opf_case89_pegase'
 lineconstraints = False
 instance_config = {"lineconstraints" : lineconstraints,  "cliques_strategy":"ASP"}
 Instance = instance.ACOPFinstance("pglib-opf-TYP/{0}.m".format(name_instance),name_instance,instance_config)   
+
+B = mosekACOPFsolver.MosekRelaxationSolver(Instance)
+mosek_claimed_value,alpha, beta, gamma, lamda_f, lamda_t, nu = B.solve()
+print("Mosek claimed value = {0}".format(mosek_claimed_value))
+
 R = dualACOPFsolverSmoothing.dualACOPFsolver(Instance)
-R.test()
-R.solve(10)
+#R.test()
+R.solve(100,1e-9)
