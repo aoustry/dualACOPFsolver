@@ -652,19 +652,19 @@ class dualACOPFsolver():
         Gval = self.__G_value_oracle(theta)
         return Gval + Fval
     
-    def value_smoothed(self,theta,epsilon,mu):
+    def value_smoothed(self,theta,theta_ref,epsilon,mu):
         """Function to evaluate a dual solution. No side effect on the class attributes. """
         Fval = 0
         for idx_clique in range(self.cliques_nbr):
             U,s = self.__SVD(theta[self.vars[idx_clique]],idx_clique)
             Fval+= -self.rho[idx_clique]* self.__spectral_sftplus(-s,epsilon)
         Gval = self.__G_value_oracle_smoothed(theta,epsilon)
-        return Gval + Fval - 0.5*mu*np.linalg.norm(theta)**2
+        return Gval + Fval - 0.5*mu*np.linalg.norm(theta-theta_ref)**2
     
-    def value_smoothed_with_derivatives(self,theta,epsilon,mu):
+    def value_smoothed_with_derivatives(self,theta,theta_ref,epsilon,mu):
         """Function to evaluate dual smooth function and derivatives """
         value = self.__G_value_oracle_smoothed(theta,epsilon)
-        gradient = -theta*mu#np.zeros(len(theta))
+        gradient = -(theta-theta_ref)*mu#np.zeros(len(theta))
         gradient_g = self.__G_gradient_oracle_smoothed(theta,epsilon)
         gradient[:len(gradient_g)]+= gradient_g
         hessian_g = self.__G_hessian_oracle_smoothed(theta,epsilon)
@@ -686,7 +686,7 @@ class dualACOPFsolver():
                             full_hessian[(i,j)]=H[aux1,aux2]
         hdata,hrc = list(full_hessian.values()), [list(t) for t in zip(*(list(full_hessian.keys())))]
         sparse_hessian = coo_matrix((hdata,(hrc[0],hrc[1])),shape = (len(theta),len(theta))).tocsc()
-        return value- 0.5*mu*np.linalg.norm(theta)**2, gradient, sparse_hessian - mu * eye(len(theta))
+        return value- 0.5*mu*np.linalg.norm(theta-theta_ref)**2, gradient, sparse_hessian - mu * eye(len(theta))
     
     def test_spectral_der(self,theta,epsilon):
         """Function to evaluate dual smooth function and derivatives """
@@ -751,29 +751,40 @@ class dualACOPFsolver():
         """Init """
         m = self.N+2*self.n+2*self.cl+self.eta_nbr
         theta = np.zeros(m)
+        theta_ref = np.zeros(m)
         alpha_param = 0.25
         beta_param = 0.5
-        sp = np.inf
-        while sp > 1e-6:
-            print('--------------------------')
-            value, gradient, sparse_hessian = self.value_smoothed_with_derivatives(theta,epsilon,mu)
-            print("Approx value = {0}".format(value))
-            exact_value = self.value(theta)
-            print("Exact value = {0}".format(exact_value))
-            delta = spsolve(sparse_hessian,-gradient)
-            t = 1
-            theta_aux = theta+t*delta
-            sp = gradient.dot(delta)
-            value_aux = self.value_smoothed(theta_aux,epsilon,mu)
-            print("Scalar prod = {0}".format(sp))
-            inner_it = 0
-            while value_aux<= value + alpha_param*t*sp:
-                t =  beta_param*t
+        
+        it = 0
+        while epsilon>0.001:
+            sp = np.inf
+            while sp > epsilon*1e-2:
+                print('----------Iteration = {0}----------------'.format(it))
+                it+=1
+                value, gradient, sparse_hessian = self.value_smoothed_with_derivatives(theta,theta_ref,epsilon,mu)
+                print("Approx value = {0}".format(value))
+                exact_value = self.value(theta)
+                print("Exact value = {0}".format(exact_value))
+                delta = spsolve(sparse_hessian,-gradient)
+                t = 1
                 theta_aux = theta+t*delta
-                value_aux = self.value_smoothed(theta_aux,epsilon,mu)
-                inner_it+=1
-            theta = theta_aux
-            print("Inner iterations nbr = {0}".format(inner_it))
-            print('Theta norm = {0}'.format(np.linalg.norm(theta)))
-            print('gradient norm = {0}'.format(np.linalg.norm(gradient)))
+                sp = gradient.dot(delta)
+                value_aux = self.value_smoothed(theta_aux,theta_ref,epsilon,mu)
+                print("Scalar prod = {0}".format(sp))
+                inner_it = 0
+                if sp<epsilon*1e-2:
+                    break
+                while value_aux<= value + alpha_param*t*sp:
+                    t =  beta_param*t
+                    theta_aux = theta+t*delta
+                    value_aux = self.value_smoothed(theta_aux,theta_ref,epsilon,mu)
+                    inner_it+=1
+                theta = theta_aux.copy()
+                print("Inner iterations nbr = {0}".format(inner_it))
+                distance = np.linalg.norm(theta-theta_ref)
+                print('Distance norm, penalty = {0},{1}'.format(distance,mu*distance*distance))
+                print('gradient norm = {0}'.format(np.linalg.norm(gradient)))
+                print('epsilon = {0}'.format(epsilon))
+            epsilon = 0.5*epsilon
+            theta_ref = theta.copy()
             
