@@ -20,6 +20,15 @@ my_zero_for_dual_variables = 1E-6
 marginEVfroeb = 1E-5
 magnitude_init_perturb = 1E-5
 
+
+alpha_param = 0.1
+beta_param = 0.5
+mu_min = 0.99*1e-7
+epsilon_min = 1e-4
+inner_max = 20
+reduc_ratio_epsilon = 0.5
+reduc_ratio_mu = 0.5
+sp_eps_compar_ratio = 10
 ######################################################################
 
 
@@ -648,6 +657,7 @@ class dualACOPFsolver():
         Fval = 0
         for idx_clique in range(self.cliques_nbr):
             U,s = self.__SVD(theta[self.vars[idx_clique]],idx_clique)
+            print(s)
             Fval+= self.rho[idx_clique]* min(0,s.min()) 
         Gval = self.__G_value_oracle(theta)
         return Gval + Fval
@@ -747,24 +757,27 @@ class dualACOPFsolver():
         Gval = self.__G_value_oracle(theta)
         return Gval + Fval
     
+    def update_param(self,mu,epsilon):
+         epsilon = max(epsilon_min,reduc_ratio_epsilon*epsilon)
+         mu = max(mu_min,mu*reduc_ratio_mu)
+         return mu,epsilon
+    
     def solve(self,epsilon,mu):
         """Init """
         m = self.N+2*self.n+2*self.cl+self.eta_nbr
         theta = np.zeros(m)
         theta_ref = np.zeros(m)
-        alpha_param = 0.25
-        beta_param = 0.5
         
         it = 0
-        while epsilon>0.001:
+        while epsilon>0.001 :#or mu>1e-7:
             sp = np.inf
-            while sp > epsilon*1e-2:
+            while True:
                 print('----------Iteration = {0}----------------'.format(it))
                 it+=1
                 value, gradient, sparse_hessian = self.value_smoothed_with_derivatives(theta,theta_ref,epsilon,mu)
                 print("Approx value = {0}".format(value))
                 exact_value = self.value(theta)
-                print("Exact value = {0}".format(exact_value))
+                print('Exact value = {0}'.format(exact_value))
                 delta = spsolve(sparse_hessian,-gradient)
                 t = 1
                 theta_aux = theta+t*delta
@@ -772,19 +785,22 @@ class dualACOPFsolver():
                 value_aux = self.value_smoothed(theta_aux,theta_ref,epsilon,mu)
                 print("Scalar prod = {0}".format(sp))
                 inner_it = 0
-                if sp<epsilon*1e-2:
+                if sp<epsilon*sp_eps_compar_ratio:
+                    mu,epsilon = self.update_param(mu,epsilon)
                     break
-                while value_aux<= value + alpha_param*t*sp:
+                while value_aux<= value + alpha_param*t*sp:# and inner_it<inner_max:
                     t =  beta_param*t
                     theta_aux = theta+t*delta
                     value_aux = self.value_smoothed(theta_aux,theta_ref,epsilon,mu)
                     inner_it+=1
+                # if inner_it==inner_max:
+                #     print('Stall... changing reference point.')
+                #     break
                 theta = theta_aux.copy()
                 print("Inner iterations nbr = {0}".format(inner_it))
                 distance = np.linalg.norm(theta-theta_ref)
                 print('Distance norm, penalty = {0},{1}'.format(distance,mu*distance*distance))
                 print('gradient norm = {0}'.format(np.linalg.norm(gradient)))
-                print('epsilon = {0}'.format(epsilon))
-            epsilon = 0.5*epsilon
+                print('epsilon/mu = {0}/{1}'.format(epsilon,mu))
+           
             theta_ref = theta.copy()
-            
